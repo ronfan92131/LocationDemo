@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:padding="10dp"
+        android:layout_centerHorizontal="true"
+        android:textSize="17sp"
+        android:id="@+id/welcome_tv"
+        android:textColor="#000"
+        android:text="Welcome to Location Demo!"/>
+
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/welcome_tv"
+        android:id="@+id/spinner_time"
+        android:layout_margin="10dp"
+        ></Spinner>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/spinner_time"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:text="Show This Location"
+        android:id="@+id/btnShowThisLocation"
+        android:textAllCaps="true"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnShowThisLocation"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:text="Add to firebase"
+        android:id="@+id/btn_add_this_location"
+        android:textAllCaps="true"/>
+
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="lat"
+        android:layout_below="@+id/btn_add_this_location"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:textSize="19sp"
+        android:id="@+id/location_lat"
+        android:textColor="#000"
+        android:layout_centerInParent="true"
+        />
+
+
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="long"
+        android:padding="10dp"
+        android:textSize="19sp"
+        android:layout_below="@+id/location_lat"
+        android:layout_marginTop="10dp"
+        android:id="@+id/location_long"
+        android:textColor="#000"
+        android:layout_centerInParent="true"
+        />
+
+
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/location_long"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100dp"
+        android:text="Show All Locations"
+        android:id="@+id/btn_show_other_locations"
+        android:textAllCaps="true"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btn_show_other_locations"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:text="Add Other Location"
+        android:id="@+id/btn_add_other_locations"
+        android:textAllCaps="true"/>
+
+
+</RelativeLayout>

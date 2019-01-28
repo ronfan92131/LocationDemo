@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "244563113850",
+    "firebase_url": "https://locationdemo-2543f.firebaseio.com",
+    "project_id": "locationdemo-2543f",
+    "storage_bucket": "locationdemo-2543f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244563113850:android:6f3bc742db6f23a6",
+        "android_client_info": {
+          "package_name": "com.doyen.fans.locationdemo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "244563113850-uvjj401u11not2hk4a1jqc0nmk8dmb4o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNjJpfZqBnn0FoQZi_3vFnQieDINIq700"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

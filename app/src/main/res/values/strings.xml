@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Location Firebase Demo</string>
+    <string name="title_activity_location_details">LocationDetailsActivity</string>
+</resources>
