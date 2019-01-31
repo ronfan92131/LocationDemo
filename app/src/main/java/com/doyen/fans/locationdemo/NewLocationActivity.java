@@ -1,7 +1,6 @@
 package com.doyen.fans.locationdemo;
 
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -36,22 +35,23 @@ public class NewLocationActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                Location location = new Location();
-                location.setName(mName.getText().toString());
-                location.setLongitude(Double.parseDouble(mLongtitude.getText().toString()));
-                location.setLatitude(Double.parseDouble(mLatitude.getText().toString()));
-                location.setZipcode(Integer.parseInt(mZipcode.getText().toString()));
+                FirebaseLocation firebaseLocation = new FirebaseLocation();
+                firebaseLocation.setName(mName.getText().toString());
+                firebaseLocation.setLongitude(Double.parseDouble(mLongtitude.getText().toString()));
+                firebaseLocation.setLatitude(Double.parseDouble(mLatitude.getText().toString()));
+                firebaseLocation.setZipcode(Integer.parseInt(mZipcode.getText().toString()));
+                firebaseLocation.setTimeStamp(System.currentTimeMillis()/1000);
 
-                new FirebaseDatabaseHelper().addLocation(location, new FirebaseDatabaseHelper.DataStatus(){
+                new FirebaseDatabaseHelper().addLocation(firebaseLocation, new FirebaseDatabaseHelper.DataStatus(){
 
                     @Override
-                    public void DataIsLoaded(List<Location> locations, List<String> keys) {
+                    public void DataIsLoaded(List<FirebaseLocation> firebaseLocations, List<String> keys) {
 
                     }
 
                     @Override
                     public void DataIsInserted() {
-                        Toast.makeText(NewLocationActivity.this, "The location record added successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(NewLocationActivity.this, "The firebaseLocation record added successfully", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override

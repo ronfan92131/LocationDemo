@@ -1,7 +1,6 @@
 package com.doyen.fans.locationdemo;
 
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -22,8 +21,8 @@ public class LocationListActivity extends AppCompatActivity {
 
         new FirebaseDatabaseHelper().readLocations(new FirebaseDatabaseHelper.DataStatus() {
             @Override
-            public void DataIsLoaded(List<Location> locations, List<String> keys) {
-                new RecyclerView_Config().setConfig(mRecyclerView, LocationListActivity.this, locations, keys);
+            public void DataIsLoaded(List<FirebaseLocation> firebaseLocations, List<String> keys) {
+                new RecyclerView_Config().setConfig(mRecyclerView, LocationListActivity.this, firebaseLocations, keys);
             }
 
             @Override

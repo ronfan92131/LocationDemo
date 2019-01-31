@@ -19,6 +19,8 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.List;
+
 public class GPS_Service extends Service implements LocationListener {
     public static final String TAG = "GPS_ Service";
     private Context mContext;
@@ -29,15 +31,17 @@ public class GPS_Service extends Service implements LocationListener {
     boolean isNetworkEnabled = false;
     boolean canGetLocation = false;
 
-    Location location;//Location
+    Location location;//FirebaseLocation
     double latitude;//Latitude
     double longitude;//Longitude
 
+    DeviceUuidFactory deviceUuidFactory;
     // The minimum time between updates in milliseconds
     static int time;
-    private static final long MIN_TIME_BW_UPDATES = 1000 * time;
+    private static final long MIN_TIME_BW_UPDATES = 1000 * time;  //seconds
+    private static final long MIN_DISTANCE_UPDATES = 100;  //meters
 
-    // Declaring a Location Manager
+    // Declaring a FirebaseLocation Manager
     protected LocationManager mlocationManager;
 
     public GPS_Service() {
@@ -47,25 +51,25 @@ public class GPS_Service extends Service implements LocationListener {
         this.mContext = mContext;
         this.time = Integer.parseInt(time);
         getLocation();
+        deviceUuidFactory = new DeviceUuidFactory(mContext);
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
         getLocation();
-
     }
 
     @Override
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
         getLocation();
-        Log.d("Working", "Service Started");
+        Log.d(TAG, "Service Started");
     }
 
     @SuppressLint("MissingPermission")
     public Location getLocation() {
-        Log.d(TAG, "getLocation");
+
         try {
             mlocationManager = (LocationManager) mContext.getSystemService(LOCATION_SERVICE);
             isGPSEnabled = mlocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -90,7 +94,7 @@ public class GPS_Service extends Service implements LocationListener {
                         return null;
                     }
                     */
-                    mlocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, 0, this);
+                    mlocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_UPDATES, this);
                     Log.d(TAG, "Network");
                     if (mlocationManager != null) {
                         //noinspection MissingPermission
@@ -105,7 +109,7 @@ public class GPS_Service extends Service implements LocationListener {
                 if (isGPSEnabled) {
                     if (location == null) {
                         //noinspection MissingPermission
-                        mlocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, 0, this);
+                        mlocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_UPDATES, this);
                         Log.d("GPS Enabled", "GPS Enabled");
                         if (mlocationManager != null) {
                             //noinspection MissingPermission
@@ -121,6 +125,7 @@ public class GPS_Service extends Service implements LocationListener {
         }catch(Exception e){
             e.printStackTrace();
         }
+        Log.d(TAG, "getLocation: " + latitude + " ::: " + longitude );
         return location;
     }
     public void stopUsingGPS(){
@@ -177,23 +182,59 @@ public class GPS_Service extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
+        Log.d(TAG, location.toString());
+        //saveto firebase
+        saveLocationtoFireBase(location);
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
 
     }
 
     @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
+    public void onProviderEnabled(String provider) {
 
     }
 
     @Override
-    public void onProviderEnabled(String s) {
+    public void onProviderDisabled(String provider) {
 
     }
 
-    @Override
-    public void onProviderDisabled(String s) {
+    private void saveLocationtoFireBase(Location location) {
+        FirebaseLocation firebaseLocation = new FirebaseLocation();
 
+        //save this location to server
+        firebaseLocation.setName(deviceUuidFactory.getDeviceUuid().toString());
+        firebaseLocation.setLatitude(location.getLatitude());
+        firebaseLocation.setLongitude(location.getLongitude());
+        firebaseLocation.setZipcode(92130); //dummy
+        firebaseLocation.setTimeStamp(System.currentTimeMillis()/1000);
+
+        new FirebaseDatabaseHelper().addLocation(firebaseLocation, new FirebaseDatabaseHelper.DataStatus() {
+
+            @Override
+            public void DataIsLoaded(List<FirebaseLocation> firebaseLocations, List<String> keys) {
+
+            }
+
+            @Override
+            public void DataIsInserted() {
+                // Toast.makeText(MainActivity.this, "The location record added successfully", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void DataIsUpdated() {
+
+            }
+
+            @Override
+            public void DataIsDeleted() {
+
+            }
+
+        });
     }
-
 
 }

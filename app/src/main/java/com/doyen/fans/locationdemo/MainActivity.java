@@ -16,10 +16,6 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -35,9 +31,7 @@ public class MainActivity extends AppCompatActivity {
     TextView mTextLong;
 
     GPS_Service gps;
-
-    //Firebase Work
-    DatabaseReference mDatabaseLocationDetails;
+    DeviceUuidFactory mDeviceUuidFactory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,13 +45,12 @@ public class MainActivity extends AppCompatActivity {
         mBtnAddThisLocaton = (Button)findViewById(R.id.btn_add_this_location);
         mBtnAddOtherLocatons = (Button)findViewById(R.id.btn_add_other_locations);
         mBtnShowOtherLocations = (Button)findViewById(R.id.btn_show_other_locations);
-        mDatabaseLocationDetails = FirebaseDatabase.getInstance().getReference().child("Location_Details").push();
+        mDeviceUuidFactory = new DeviceUuidFactory(this);
 
 //      permission check
         if(!runtime_permission())
             enable_button();
         runtime_permission();
-
 
         mSpinTime.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -67,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "tim: " + tim);
                 if(tim.equals("Select time")){
                     Toast.makeText(MainActivity.this, "Please Select time!", Toast.LENGTH_SHORT).show();
+                    tim="10";  //default
                 }
                 if(tim=="5 sec"){
                     tim= String.valueOf(tim.charAt(0));
@@ -90,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-                tim= String.valueOf(0);
+                tim= String.valueOf("10");
             }
         });
 
@@ -102,18 +96,35 @@ public class MainActivity extends AppCompatActivity {
         mBtnAddThisLocaton.setOnClickListener(new View.OnClickListener(){
 
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
+                gps = new GPS_Service(MainActivity.this,tim);
+                startService(new Intent(MainActivity.this,GPS_Service.class));
+
+                if(gps.canGetLocation()){
+                    double latitude = gps.getLatitude();
+                    double longitude = gps.getLongitude();
+                    //  storeInDatabase(latitude,longitude);
+
+                    mTextLat.setText(String.format("%.6f", latitude));
+                    mTextLong.setText(String.format("%.6f", longitude));
+                    Toast.makeText(MainActivity.this, latitude+" ::: "+ longitude, Toast.LENGTH_SHORT).show();
+                }else{
+                    gps.showSettingsAlert();
+                }
+            }
+/*            public void onClick(View v) {
                 //save this location to server
-                Location location = new Location();
-                location.setName("San Diego");  //dummy
+                FirebaseLocation location = new FirebaseLocation();
+                location.setName(mDeviceUuidFactory.getDeviceUuid().toString());
                 location.setLatitude(Double.parseDouble(mTextLat.getText().toString()));
                 location.setLongitude(Double.parseDouble(mTextLong.getText().toString()));
                 location.setZipcode(92130); //dummy
+                location.setTimeStamp(System.currentTimeMillis()/1000);
 
                 new FirebaseDatabaseHelper().addLocation(location, new FirebaseDatabaseHelper.DataStatus() {
 
                     @Override
-                    public void DataIsLoaded(List<Location> locations, List<String> keys) {
+                    public void DataIsLoaded(List<FirebaseLocation> locations, List<String> keys) {
 
                     }
 
@@ -132,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
-            }
+            }*/
         });
 
         mBtnAddOtherLocatons.setOnClickListener(new View.OnClickListener(){
@@ -162,10 +173,10 @@ public class MainActivity extends AppCompatActivity {
                 if(gps.canGetLocation()){
                     double latitude = gps.getLatitude();
                     double longitude = gps.getLongitude();
-                    storeInDatabase(latitude,longitude);
+                  //  storeInDatabase(latitude,longitude);
 
-                    mTextLat.setText(latitude+"");
-                    mTextLong.setText(longitude+"");
+                    mTextLat.setText(String.format("%.6f", latitude));
+                    mTextLong.setText(String.format("%.6f", longitude));
                     Toast.makeText(MainActivity.this, latitude+" ::: "+ longitude, Toast.LENGTH_SHORT).show();
                 }else{
                     gps.showSettingsAlert();
@@ -177,13 +188,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void storeInDatabase(double latitude, double longitude) {
-        Log.d(TAG, "storeInDatabase lat: " + latitude  + " long: " + longitude);
-
-        mDatabaseLocationDetails.child("latitude").setValue(latitude);
-        mDatabaseLocationDetails.child("longitude").setValue(longitude);
-    }
-
     private boolean runtime_permission() {
         if(Build.VERSION.SDK_INT>=23 && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED&& ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.ACCESS_COARSE_LOCATION)!=PackageManager.PERMISSION_GRANTED){
 
@@ -192,7 +196,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
