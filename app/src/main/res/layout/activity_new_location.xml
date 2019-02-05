@@ -34,10 +34,17 @@
         android:text="-117.1240 "/>
 
     <EditText
-        android:id="@+id/txtZipcode"
+        android:id="@+id/txtCity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/txtLongitude"
+        android:text="city" />
+
+    <EditText
+        android:id="@+id/txtZipcode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txtCity"
         android:inputType="textPersonName"
         android:text="92130" />
 

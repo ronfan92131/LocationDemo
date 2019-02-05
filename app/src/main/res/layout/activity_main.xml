@@ -15,42 +15,35 @@
         android:textSize="17sp"
         android:id="@+id/welcome_tv"
         android:textColor="#000"
-        android:text="Welcome to Location Demo!"/>
+        android:text="My Location Service"/>
 
-
-    <Spinner
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/welcome_tv"
-        android:id="@+id/spinner_time"
-        android:layout_margin="10dp"
-        ></Spinner>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/spinner_time"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"
-        android:text="Show This Location"
-        android:id="@+id/btnShowThisLocation"
+        android:layout_marginTop="100dp"
+        android:text="Start Location Service"
+        android:id="@+id/btnStartLocationService"
+        android:onClick="startService"
         android:textAllCaps="true"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/btnShowThisLocation"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
-        android:text="Add to firebase"
-        android:id="@+id/btn_add_this_location"
-        android:textAllCaps="true"/>
+        android:text="Stop Location Service"
+        android:id="@+id/btnStopLocationService"
+        android:onClick="stopService"
+        android:layout_below="@+id/btnStartLocationService"
+        />
 
     <TextView
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:text="lat"
-        android:layout_below="@+id/btn_add_this_location"
+        android:layout_below="@+id/btnStopLocationService"
         android:layout_marginTop="10dp"
         android:padding="10dp"
         android:textSize="19sp"
@@ -80,19 +73,19 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/location_long"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="100dp"
-        android:text="Show All Locations"
-        android:id="@+id/btn_show_other_locations"
+        android:layout_marginTop="20dp"
+        android:text="Show My Locations"
+        android:id="@+id/btn_show_all_locations"
         android:textAllCaps="true"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/btn_show_other_locations"
+        android:layout_below="@+id/btn_show_all_locations"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
-        android:text="Add Other Location"
-        android:id="@+id/btn_add_other_locations"
+        android:text="Remove My Locations"
+        android:id="@+id/btn_rm_all_locations"
         android:textAllCaps="true"/>
 
 

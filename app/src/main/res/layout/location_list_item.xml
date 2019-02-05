@@ -7,10 +7,11 @@
     android:layout_height="wrap_content">
 
     <TextView
-        android:id="@+id/textView_name"
+        android:id="@+id/textView_city"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="name"
+        android:maxWidth="200dp"
+        android:text="city"
         tools:layout_editor_absoluteX="63dp"
         tools:layout_editor_absoluteY="136dp" />
 
@@ -35,11 +36,11 @@
         tools:layout_editor_absoluteY="190dp" />
 
     <TextView
-        android:id="@+id/textView_zip"
+        android:id="@+id/textView_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textView_name"
-        android:text="zipcode"
+        android:layout_below="@+id/textView_city"
+        android:text="time"
         tools:layout_editor_absoluteX="62dp"
         tools:layout_editor_absoluteY="190dp" />
 </RelativeLayout>

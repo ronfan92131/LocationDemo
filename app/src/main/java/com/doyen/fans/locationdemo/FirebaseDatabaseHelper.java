@@ -15,10 +15,10 @@ import java.util.List;
 public class FirebaseDatabaseHelper {
     private FirebaseDatabase mDatabase;
     private DatabaseReference mReferenceLocations;
-    private List<Location> locations = new ArrayList<>();
+    private List<FirebaseLocation> firebaseLocations = new ArrayList<>();
 
     public interface DataStatus{
-        void DataIsLoaded(List<Location> locations, List<String> keys);
+        void DataIsLoaded(List<FirebaseLocation> firebaseLocations, List<String> keys);
         void DataIsInserted();
         void DataIsUpdated();
         void DataIsDeleted();
@@ -26,21 +26,21 @@ public class FirebaseDatabaseHelper {
 
     public FirebaseDatabaseHelper(){
         mDatabase = FirebaseDatabase.getInstance();
-        mReferenceLocations = mDatabase.getReference("locations");
+        mReferenceLocations = mDatabase.getReference("firebaseLocations");
     }
 
     public void readLocations(final DataStatus dataStatus){
         mReferenceLocations.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                locations.clear();
+                firebaseLocations.clear();
                 List<String> keys = new ArrayList<>();
                 for (DataSnapshot keyNode: dataSnapshot.getChildren()){
                     keys.add(keyNode.getKey());
-                    Location location = keyNode.getValue(Location.class);
-                    locations.add(location);
+                    FirebaseLocation firebaseLocation = keyNode.getValue(FirebaseLocation.class);
+                    firebaseLocations.add(firebaseLocation);
                 }
-                dataStatus.DataIsLoaded(locations, keys);
+                dataStatus.DataIsLoaded(firebaseLocations, keys);
             }
 
             @Override
@@ -51,9 +51,9 @@ public class FirebaseDatabaseHelper {
 
     }
 
-    public void addLocation(Location location, final DataStatus dataStatus){
+    public void addLocation(FirebaseLocation firebaseLocation, final DataStatus dataStatus){
         String key = mReferenceLocations.push().getKey();
-        mReferenceLocations.child(key).setValue(location)
+        mReferenceLocations.child(key).setValue(firebaseLocation)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -62,8 +62,8 @@ public class FirebaseDatabaseHelper {
                 });
     }
 
-    public void updateLocation(String key, Location location, final DataStatus dataStatus){
-        mReferenceLocations.child(key).setValue(location)
+    public void updateLocation(String key, FirebaseLocation firebaseLocation, final DataStatus dataStatus){
+        mReferenceLocations.child(key).setValue(firebaseLocation)
             .addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void aVoid) {

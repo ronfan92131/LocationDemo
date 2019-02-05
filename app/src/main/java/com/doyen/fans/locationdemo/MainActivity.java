@@ -1,8 +1,11 @@
 package com.doyen.fans.locationdemo;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
@@ -17,27 +20,26 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "GPS_ MainActivity";
-    String timer[]={"Select time","5 sec","10 sec","15 sec","20 sec","30 sec"};
-    String tim;
-    Button mBtnShowThisLocation;
-    Button mBtnAddThisLocaton;
-    Button mBtnAddOtherLocatons;
-    Button mBtnShowOtherLocations;
+    String tim = "10";
+    Button btnStartLocationService;
+    Button mBtnRmAllLocatons;
+    Button mBtnShowAllLocations;
 
+    GPS_Service gps_service;
+
+    FirebaseDatabaseHelper firebaseDatabaseHelper;
+    List<String> myLocationKeys;
     TextView mTextLat;
     TextView mTextLong;
 
-    GPS_Service gps;
-
-    //Firebase Work
-    DatabaseReference mDatabaseLocationDetails;
+ //   GPS_Service gps_service;
+    DeviceUuidFactory deviceUuidFactory;
+    String myDeviceName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,103 +48,49 @@ public class MainActivity extends AppCompatActivity {
 
         mTextLong = (TextView) findViewById(R.id.location_long);
         mTextLat = (TextView) findViewById(R.id.location_lat);
-        Spinner mSpinTime= (Spinner) findViewById(R.id.spinner_time);
-        mBtnShowThisLocation= (Button) findViewById(R.id.btnShowThisLocation);
-        mBtnAddThisLocaton = (Button)findViewById(R.id.btn_add_this_location);
-        mBtnAddOtherLocatons = (Button)findViewById(R.id.btn_add_other_locations);
-        mBtnShowOtherLocations = (Button)findViewById(R.id.btn_show_other_locations);
-        mDatabaseLocationDetails = FirebaseDatabase.getInstance().getReference().child("Location_Details").push();
+        btnStartLocationService= (Button) findViewById(R.id.btnStartLocationService);
+        mBtnRmAllLocatons = (Button)findViewById(R.id.btn_rm_all_locations);
+        mBtnShowAllLocations = (Button)findViewById(R.id.btn_show_all_locations);
+        deviceUuidFactory = new DeviceUuidFactory(this);
+        myLocationKeys = new ArrayList<>();
 
-//      permission check
+   //   Manifest.permission check
         if(!runtime_permission())
             enable_button();
         runtime_permission();
 
-
-        mSpinTime.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-
-                tim= adapterView.getItemAtPosition(i).toString();
-                Log.d(TAG, "tim: " + tim);
-                if(tim.equals("Select time")){
-                    Toast.makeText(MainActivity.this, "Please Select time!", Toast.LENGTH_SHORT).show();
-                }
-                if(tim=="5 sec"){
-                    tim= String.valueOf(tim.charAt(0));
-                    Toast.makeText(MainActivity.this, tim+"", Toast.LENGTH_SHORT).show();
-                }
-                if(tim=="10 sec"){
-                    tim= tim.substring(0,2);
-                    Toast.makeText(MainActivity.this, tim+"", Toast.LENGTH_SHORT).show();
-                }if(tim=="15 sec"){
-                    tim= tim.substring(0,2);
-                    Toast.makeText(MainActivity.this, tim+"", Toast.LENGTH_SHORT).show();
-                }if(tim=="20 sec"){
-                    tim= tim.substring(0,2);
-                    Toast.makeText(MainActivity.this, tim+"", Toast.LENGTH_SHORT).show();
-                }if(tim=="30 sec"){
-                    tim= tim.substring(0,2);
-                    Toast.makeText(MainActivity.this, tim+"", Toast.LENGTH_SHORT).show();
-                }
-
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                tim= String.valueOf(0);
-            }
-        });
-
-        ArrayAdapter arrayAdapterCity = new ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item,timer);
-        arrayAdapterCity.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mSpinTime.setAdapter(arrayAdapterCity);
-
-
-        mBtnAddThisLocaton.setOnClickListener(new View.OnClickListener(){
-
+        mBtnRmAllLocatons.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                //save this location to server
-                Location location = new Location();
-                location.setName("San Diego");  //dummy
-                location.setLatitude(Double.parseDouble(mTextLat.getText().toString()));
-                location.setLongitude(Double.parseDouble(mTextLong.getText().toString()));
-                location.setZipcode(92130); //dummy
+              //rm all locations
+                Toast.makeText(MainActivity.this, "Remove all my locations", Toast.LENGTH_SHORT).show();
+                getAllMyLocations();
 
-                new FirebaseDatabaseHelper().addLocation(location, new FirebaseDatabaseHelper.DataStatus() {
-
+                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                     @Override
-                    public void DataIsLoaded(List<Location> locations, List<String> keys) {
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which){
+                            case DialogInterface.BUTTON_POSITIVE:
+                                //Yes button clicked
+                                deleteMyAllLocations();
+                                break;
 
+                            case DialogInterface.BUTTON_NEGATIVE:
+                                //No button clicked
+                                break;
+                        }
                     }
+                };
 
-                    @Override
-                    public void DataIsInserted() {
-                        Toast.makeText(MainActivity.this, "The location record added successfully", Toast.LENGTH_SHORT).show();
-                    }
+                AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
+                builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
+                        .setNegativeButton("No", dialogClickListener).show();
 
-                    @Override
-                    public void DataIsUpdated() {
-
-                    }
-
-                    @Override
-                    public void DataIsDeleted() {
-
-                    }
-                });
+                //    startActivity(new Intent(MainActivity.this, NewLocationActivity.class));
             }
         });
 
-        mBtnAddOtherLocatons.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, NewLocationActivity.class));
-            }
-        });
-
-        mBtnShowOtherLocations.setOnClickListener(new View.OnClickListener() {
+        mBtnShowAllLocations.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, LocationListActivity.class));
@@ -151,37 +99,117 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void enable_button() {
+    public void startService(View v){
+        Log.d(TAG, "startService: ");
+        gps_service = new GPS_Service(MainActivity.this,tim);
+      //  Intent serviceIntent = new Intent(this, GPS_Service.class);
+        //serviceIntent.putExtra("CONTEXT", getApplicationContext().toString());
 
-        mBtnShowThisLocation.setOnClickListener(new View.OnClickListener() {
+       // startService(new Intent(MainActivity.this,GPS_Service.class));
+        //Intent serviceIntent = new Intent(this, GPS_Service.class);
+        //startService(serviceIntent);
+    }
+
+    public void stopService(View v){
+        Log.d(TAG, "stopService");
+        Intent serviceIntent = new Intent(this, GPS_Service.class);
+        stopService(serviceIntent);
+    }
+
+    public void getAllMyLocations(){
+        Log.d(TAG, "getAllMyLocations");
+        myDeviceName = deviceUuidFactory.getDeviceUuid().toString();
+
+
+        new FirebaseDatabaseHelper().readLocations(new FirebaseDatabaseHelper.DataStatus() {
+
+            //ArrayList<String> myLocationKeys = new ArrayList<>();
             @Override
-            public void onClick(View view) {
-                gps = new GPS_Service(MainActivity.this,tim);
-                startService(new Intent(MainActivity.this,GPS_Service.class));
-
-                if(gps.canGetLocation()){
-                    double latitude = gps.getLatitude();
-                    double longitude = gps.getLongitude();
-                    storeInDatabase(latitude,longitude);
-
-                    mTextLat.setText(latitude+"");
-                    mTextLong.setText(longitude+"");
-                    Toast.makeText(MainActivity.this, latitude+" ::: "+ longitude, Toast.LENGTH_SHORT).show();
-                }else{
-                    gps.showSettingsAlert();
+            public void DataIsLoaded(List<FirebaseLocation> firebaseLocations, List<String> keys) {
+                //locationKeys = keys;
+                //read only matching name keys, not all records
+                for (int i = 0; i < firebaseLocations.size(); i++){
+                    if (firebaseLocations.get(i).getName().equals(myDeviceName)){
+                        myLocationKeys.add(keys.get(i));
+                    }
                 }
+                //Log.d(TAG, "DataIsLoaded  keys: " + myLocationKeys.toString());
+            }
+
+            @Override
+            public void DataIsInserted() {
+
+            }
+
+            @Override
+            public void DataIsUpdated() {
+
+            }
+
+            @Override
+            public void DataIsDeleted() {
+
             }
         });
+    }
 
+
+    public void deleteMyAllLocations(){
+        Log.d(TAG, "deleteMyAllLocations");
+
+        while(myLocationKeys.size() > 0){
+
+            String key = myLocationKeys.get(0);
+
+            new FirebaseDatabaseHelper().deleteLocation(key, new FirebaseDatabaseHelper.DataStatus(){
+
+                @Override
+                public void DataIsLoaded(List<FirebaseLocation> firebaseLocations, List<String> keys) {
+
+                }
+
+                @Override
+                public void DataIsInserted() {
+
+                }
+
+                @Override
+                public void DataIsUpdated() {
+
+                }
+
+                @Override
+                public void DataIsDeleted() {
+                    Log.d(TAG, "DataIsDeleted");
+                }
+            });
+            myLocationKeys.remove(0);
+        }
 
 
     }
 
-    private void storeInDatabase(double latitude, double longitude) {
-        Log.d(TAG, "storeInDatabase lat: " + latitude  + " long: " + longitude);
+    private void enable_button() {
 
-        mDatabaseLocationDetails.child("latitude").setValue(latitude);
-        mDatabaseLocationDetails.child("longitude").setValue(longitude);
+        btnStartLocationService.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                gps_service = new GPS_Service(MainActivity.this,tim);
+                startService(new Intent(MainActivity.this,GPS_Service.class));
+
+                if(gps_service.canGetLocation()){
+                    double latitude = gps_service.getLatitude();
+                    double longitude = gps_service.getLongitude();
+                  //  storeInDatabase(latitude,longitude);
+
+                    mTextLat.setText(String.format("%.6f", latitude));
+                    mTextLong.setText(String.format("%.6f", longitude));
+                    Toast.makeText(MainActivity.this, latitude+" ::: "+ longitude, Toast.LENGTH_SHORT).show();
+                }else{
+                    gps_service.showSettingsAlert();
+                }
+            }
+        });
     }
 
     private boolean runtime_permission() {
@@ -192,7 +220,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -205,4 +232,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 }

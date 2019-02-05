@@ -1,19 +1,39 @@
 package com.doyen.fans.locationdemo;
 
-public class Location {
+public class FirebaseLocation {
     private String name;
     private double longitude;
     private double latitude;
+    private String city;
     private int zipcode;
+    private long timeStamp;
 
-    public Location() {
+    public FirebaseLocation() {
     }
 
-    public Location(String name, double longitude, double latitude, int zipcode) {
+    public FirebaseLocation(String name, double longitude, double latitude, String city, int zipcode, long timeStamp) {
         this.name = name;
         this.longitude = longitude;
         this.latitude = latitude;
+        this.city = city;
         this.zipcode = zipcode;
+        this.timeStamp = timeStamp;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
     }
 
     public String getName() {
