@@ -40,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
  //   GPS_Service gps_service;
     DeviceUuidFactory deviceUuidFactory;
     String myDeviceName;
+    GPS_Service gps;
+    DeviceUuidFactory mDeviceUuidFactory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,17 +57,25 @@ public class MainActivity extends AppCompatActivity {
         myLocationKeys = new ArrayList<>();
 
    //   Manifest.permission check
+        Spinner mSpinTime= (Spinner) findViewById(R.id.spinner_time);
+        mBtnShowThisLocation= (Button) findViewById(R.id.btnShowThisLocation);
+        mBtnAddThisLocaton = (Button)findViewById(R.id.btn_add_this_location);
+        mBtnAddOtherLocatons = (Button)findViewById(R.id.btn_add_other_locations);
+        mBtnShowOtherLocations = (Button)findViewById(R.id.btn_show_other_locations);
+        mDeviceUuidFactory = new DeviceUuidFactory(this);
+
+//      permission check
         if(!runtime_permission())
             enable_button();
         runtime_permission();
 
         mBtnRmAllLocatons.setOnClickListener(new View.OnClickListener(){
+        mSpinTime.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onClick(View v) {
               //rm all locations
                 Toast.makeText(MainActivity.this, "Remove all my locations", Toast.LENGTH_SHORT).show();
                 getAllMyLocations();
-
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -81,6 +91,29 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 };
+                tim= adapterView.getItemAtPosition(i).toString();
+                Log.d(TAG, "tim: " + tim);
+                if(tim.equals("Select time")){
+                    Toast.makeText(MainActivity.this, "Please Select time!", Toast.LENGTH_SHORT).show();
+                    tim="10";  //default
+                }
+                if(tim=="5 sec"){
+                    tim= String.valueOf(tim.charAt(0));
+                    Toast.makeText(MainActivity.this, tim+"", Toast.LENGTH_SHORT).show();
+                }
+                if(tim=="10 sec"){
+                    tim= tim.substring(0,2);
+                    Toast.makeText(MainActivity.this, tim+"", Toast.LENGTH_SHORT).show();
+                }if(tim=="15 sec"){
+                    tim= tim.substring(0,2);
+                    Toast.makeText(MainActivity.this, tim+"", Toast.LENGTH_SHORT).show();
+                }if(tim=="20 sec"){
+                    tim= tim.substring(0,2);
+                    Toast.makeText(MainActivity.this, tim+"", Toast.LENGTH_SHORT).show();
+                }if(tim=="30 sec"){
+                    tim= tim.substring(0,2);
+                    Toast.makeText(MainActivity.this, tim+"", Toast.LENGTH_SHORT).show();
+                }
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
                 builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
@@ -94,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, LocationListActivity.class));
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                tim= String.valueOf("10");
             }
         });
 
@@ -104,42 +139,24 @@ public class MainActivity extends AppCompatActivity {
         gps_service = new GPS_Service(MainActivity.this,tim);
       //  Intent serviceIntent = new Intent(this, GPS_Service.class);
         //serviceIntent.putExtra("CONTEXT", getApplicationContext().toString());
-
-       // startService(new Intent(MainActivity.this,GPS_Service.class));
-        //Intent serviceIntent = new Intent(this, GPS_Service.class);
-        //startService(serviceIntent);
-    }
-
-    public void stopService(View v){
-        Log.d(TAG, "stopService");
-        Intent serviceIntent = new Intent(this, GPS_Service.class);
-        stopService(serviceIntent);
-    }
-
-    public void getAllMyLocations(){
-        Log.d(TAG, "getAllMyLocations");
-        myDeviceName = deviceUuidFactory.getDeviceUuid().toString();
-
-
-        new FirebaseDatabaseHelper().readLocations(new FirebaseDatabaseHelper.DataStatus() {
-
-            //ArrayList<String> myLocationKeys = new ArrayList<>();
             @Override
-            public void DataIsLoaded(List<FirebaseLocation> firebaseLocations, List<String> keys) {
-                //locationKeys = keys;
-                //read only matching name keys, not all records
-                for (int i = 0; i < firebaseLocations.size(); i++){
-                    if (firebaseLocations.get(i).getName().equals(myDeviceName)){
-                        myLocationKeys.add(keys.get(i));
-                    }
+            public void onClick(View view) {
+                gps = new GPS_Service(MainActivity.this,tim);
+                startService(new Intent(MainActivity.this,GPS_Service.class));
+
+                if(gps.canGetLocation()){
+                    double latitude = gps.getLatitude();
+                    double longitude = gps.getLongitude();
+                    //  storeInDatabase(latitude,longitude);
+
+                    mTextLat.setText(String.format("%.6f", latitude));
+                    mTextLong.setText(String.format("%.6f", longitude));
+                    Toast.makeText(MainActivity.this, latitude+" ::: "+ longitude, Toast.LENGTH_SHORT).show();
+                }else{
+                    gps.showSettingsAlert();
                 }
-                //Log.d(TAG, "DataIsLoaded  keys: " + myLocationKeys.toString());
             }
-
-            @Override
-            public void DataIsInserted() {
-
-            }
+        });
 
             @Override
             public void DataIsUpdated() {
@@ -200,6 +217,9 @@ public class MainActivity extends AppCompatActivity {
                 if(gps_service.canGetLocation()){
                     double latitude = gps_service.getLatitude();
                     double longitude = gps_service.getLongitude();
+                if(gps.canGetLocation()){
+                    double latitude = gps.getLatitude();
+                    double longitude = gps.getLongitude();
                   //  storeInDatabase(latitude,longitude);
 
                     mTextLat.setText(String.format("%.6f", latitude));

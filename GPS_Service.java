@@ -38,7 +38,6 @@ import java.util.Locale;
 import java.util.Queue;
 
 import static com.doyen.fans.locationdemo.NotificationApp.CHANNEL_ID;
-import java.util.List;
 
 public class GPS_Service extends Service implements LocationListener {
     public static final String TAG = "GPS_ Service";
@@ -58,16 +57,12 @@ public class GPS_Service extends Service implements LocationListener {
     double longitude;//Longitude
 
     DeviceUuidFactory deviceUuidFactory;
-    static int time;
-    private static final long MIN_TIME_BW_UPDATES = 60000;  //60seconds
-    private static final long MIN_DISTANCE_UPDATES = 100;  //meters
-
-    private Queue<FirebaseLocation> firebaseLocationQueue;
     // The minimum time between updates in milliseconds
     static int time;
     private static final long MIN_TIME_BW_UPDATES = 1000 * time;  //seconds
     private static final long MIN_DISTANCE_UPDATES = 100;  //meters
 
+    private Queue<FirebaseLocation> firebaseLocationQueue;
     // Declaring a FirebaseLocation Manager
     protected LocationManager mlocationManager;
 
@@ -76,14 +71,10 @@ public class GPS_Service extends Service implements LocationListener {
     public GPS_Service() {
     }
 
-    public GPS_Service(Context context, String tim) {
+    public GPS_Service(Context mContext, String time) {
         Log.d(TAG, "GPS_Service");
-        this.mContext = context;
-        this.time = Integer.parseInt(tim);
-
-        deviceUuidFactory = new DeviceUuidFactory(mContext);
-        geocoder = new Geocoder(this.mContext, Locale.getDefault());
-
+        this.mContext = mContext;
+        this.time = Integer.parseInt(time);
         getLocation();
         deviceUuidFactory = new DeviceUuidFactory(mContext);
     }
@@ -91,35 +82,42 @@ public class GPS_Service extends Service implements LocationListener {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate");
+     //   getLocation();
 
         cm = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
         activeNetwork = cm.getActiveNetworkInfo();
-        getLocation();
+        Log.d(TAG, "onCreate");
     }
 
     @Override
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
-        Log.d(TAG, "onStart");
+       // getLocation();
+        Log.d(TAG, "Service Started");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand");
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0
         );
+
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Foreground Serviee")
                 .setContentIntent(pendingIntent)
                 .build();
 
+        if (Build.VERSION.SDK_INT >= 26) {
             startForeground(1, notification);  //for long running service, even app is gone
+        }else{
+            startService(notificationIntent);  // earlier android version
+        }
 
+       // cadence = intent.getStringExtra("CADENCE");
+        Log.d(TAG, "onStartCommand " );
+       // startMP3Player();
         getLocation();
-        Log.d(TAG, "Service Started");
         return START_NOT_STICKY;
     }
 
@@ -127,7 +125,7 @@ public class GPS_Service extends Service implements LocationListener {
     public Location getLocation() {
 
         try {
-            mlocationManager = (LocationManager)mContext.getSystemService(LOCATION_SERVICE);
+            mlocationManager = (LocationManager) mContext.getSystemService(LOCATION_SERVICE);
             isGPSEnabled = mlocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
             isNetworkEnabled = mlocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
             if (!isGPSEnabled && !isNetworkEnabled) {
@@ -136,8 +134,20 @@ public class GPS_Service extends Service implements LocationListener {
                 this.canGetLocation = true;
                 // First get location from Network Provider
                 if (isNetworkEnabled) {
-                    mlocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_UPDATES, this);
-                    Log.d(TAG, "isNetworkEnabled");
+                    //noinspection MissingPermission
+                /*    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        Toast.makeText(this, "GPS permission denied", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG,"GPS permission denied" );
+                        return null;
+                    }
+                    */
                     mlocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_UPDATES, this);
                     Log.d(TAG, "Network");
                     if (mlocationManager != null) {
@@ -154,7 +164,6 @@ public class GPS_Service extends Service implements LocationListener {
                     if (location == null) {
                         //noinspection MissingPermission
                         mlocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_UPDATES, this);
-                        Log.d(TAG, "isGPSEnabled && location == null");
                         Log.d("GPS Enabled", "GPS Enabled");
                         if (mlocationManager != null) {
                             //noinspection MissingPermission
@@ -200,6 +209,7 @@ public class GPS_Service extends Service implements LocationListener {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
 
         alertDialog.setTitle("GPS is settings");
+
         alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
 
         alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
@@ -225,7 +235,7 @@ public class GPS_Service extends Service implements LocationListener {
 
 
     @Override
-    public void onLocationChanged(Location location)  {
+    public void onLocationChanged(Location location) {
         Log.d(TAG, "onLocationChanged: " + location.toString());
         //saveto firebase
         saveLocationtoFireBase(location);
@@ -246,7 +256,7 @@ public class GPS_Service extends Service implements LocationListener {
 
     }
 
-    public void saveLocationtoFireBase(Location location)  {
+    public void saveLocationtoFireBase(Location location) {
         Log.d(TAG, "saveLocationtoFireBase");
 
         //first, enque location to a local q, this is necessacary in case no data connection
@@ -256,7 +266,7 @@ public class GPS_Service extends Service implements LocationListener {
         deQueueFirebaseLocation();
     }
 
-    public void  enQueueFirebaseLocation (Location location)  {
+    public void  enQueueFirebaseLocation(Location location) {
         if (firebaseLocationQueue == null) {
             firebaseLocationQueue = new LinkedList<>();
         }
@@ -266,58 +276,40 @@ public class GPS_Service extends Service implements LocationListener {
         firebaseLocation.setLatitude(location.getLatitude());
         firebaseLocation.setLongitude(location.getLongitude());
 
-        firebaseLocation.setZipcode(getZipcode(location));
-        firebaseLocation.setCity(getCity(location));
-
+        try {
+            firebaseLocation.setZipcode(getZipcode(location));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         firebaseLocation.setTimeStamp(System.currentTimeMillis() / 1000);
 
         firebaseLocationQueue.add(firebaseLocation);
-        Log.d(TAG, "enQueueFirebaseLocation: " + firebaseLocationQueue.size());
+        Log.d(TAG, "enQueueFirebaseLocation");
     }
 
-    public String getCity(Location location) {
-        //List<Address> addresses;
-      //  geocoder = new Geocoder(this.mContext, Locale.getDefault());
-        List<Address> addresses = null;
-        String city = "n/a";
-        try {
-            addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-            if (addresses.size()>0) {
-                city = addresses.get(0).getLocality();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Log.d(TAG, "getCity: " + city);
-        return city;
+    public int getZipcode(Location location) throws IOException {
+        List<Address> addresses;
+        geocoder = new Geocoder(this.mContext, Locale.getDefault());
+        addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+        //String address = addresses.get(0).getAddressLine(0);
+        //String city = addresses.get(0).getAddressLine(1);
+        //String country = addresses.get(0).getAddressLine(2);
+        String zipcode = addresses.get(0).getPostalCode();
+        Log.d(TAG, "getZipcode: " + zipcode);
+        return Integer.parseInt(zipcode);
     }
 
-    public int getZipcode(Location location)  {
-       // List<Address> addresses;
-       // geocoder = new Geocoder(this.mContext, Locale.getDefault());
-        String zipcode = null;
-        List<Address> addresses = null;
-        try {
-            addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-            if (addresses.size()>0){
-               zipcode = addresses.get(0).getPostalCode();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        int zip = 0;
-        if (zipcode!=null){
-            zip = Integer.parseInt(zipcode);
-        }
-        Log.d(TAG, "getZipcode: " + zip);
-        return zip;
-    }
-
-    public void deQueueFirebaseLocation() {
+    public void deQueueFirebaseLocation(){
         Log.d(TAG, "deQueueFirebaseLocation: " + firebaseLocationQueue.size());
 
-        while (firebaseLocationQueue.size() > 0) {
+       // activeNetwork = cm.getActiveNetworkInfo();
+   /*     isNetworkConnected = (activeNetwork != null) && activeNetwork.isConnectedOrConnecting();
+        if (isNetworkConnected == false ) {
+            Log.d(TAG, "deQueueFirebaseLocation: " + "isNetworkConnected false");
+            return;
+        }
+*/
+        while(firebaseLocationQueue.size() > 0) {
             new FirebaseDatabaseHelper().addLocation(firebaseLocationQueue.remove(), new FirebaseDatabaseHelper.DataStatus() {
 
                 @Override
